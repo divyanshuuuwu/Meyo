@@ -1,7 +1,6 @@
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
   provider = "prisma-client"
@@ -11,8 +10,6 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-
-
 
 model User {
   id        String   @id @default(cuid())
@@ -26,14 +23,37 @@ model User {
   age       Int?
   gender    String?
   bio       String?
-  image     String?
 
   // Personal details
-  height    Int?     // height in cm
+  height     Int?     // height in cm
   occupation String?
-  location  String?
+  location   String?
+
+  // Profile images
+  images UserImage[]
 
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model UserImage {
+  id        String   @id @default(cuid())
+
+  // Cloudinary image URL
+  url       String
+
+  // 1 = profile/main photo, 2-6 = additional photos
+  position  Int
+
+  // Relationship with User
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  // A user cannot have two images in the same position
+  @@unique([userId, position])
+}
+

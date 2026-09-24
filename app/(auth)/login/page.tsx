@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { loginUser } from "@/app/actions/auth";
 
 import {
   ArrowRight,
@@ -184,7 +185,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Form */}
-                <form  className="space-y-4">
+                <form action={loginUser} className="space-y-4">
                   {/* Email */}
                   <div>
                     <label className="mb-2 block text-xs font-medium text-white/50">
@@ -198,6 +199,7 @@ export default function LoginPage() {
                       />
 
                       <input
+                        name="email"
                         type="email"
                         placeholder="you@example.com"
                         className="h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/20"
@@ -227,6 +229,7 @@ export default function LoginPage() {
                       />
 
                       <input
+                        name="password"
                         type="password"
                         placeholder="••••••••"
                         className="h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/20"
