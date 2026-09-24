@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import {
   ArrowRight,
   Heart,
@@ -183,7 +184,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Form */}
-                <form className="space-y-4">
+                <form  className="space-y-4">
                   {/* Email */}
                   <div>
                     <label className="mb-2 block text-xs font-medium text-white/50">

@@ -1,4 +1,4 @@
-
+import { registerUser } from "@/app/actions/auth";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -188,7 +188,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Form */}
-                <form className="space-y-4">
+                <form action={registerUser} className="space-y-4">
                   {/* Name */}
                   <div>
                     <label className="mb-2 block text-xs font-medium text-white/50">
@@ -202,6 +202,7 @@ export default function RegisterPage() {
                       />
 
                       <input
+                        name="name"
                         type="text"
                         placeholder="What should we call you?"
                         className="h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/20"
@@ -222,6 +223,7 @@ export default function RegisterPage() {
                       />
 
                       <input
+                        name="email"
                         type="email"
                         placeholder="you@example.com"
                         className="h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/20"
@@ -242,6 +244,7 @@ export default function RegisterPage() {
                       />
 
                       <input
+                        name="password"
                         type="password"
                         placeholder="Create a password"
                         className="h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/20"
