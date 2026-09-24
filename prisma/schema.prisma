@@ -12,9 +12,28 @@ datasource db {
   provider = "postgresql"
 }
 
+
+
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
+  id        String   @id @default(cuid())
+
+  // Authentication
   email     String   @unique
+  password  String
+
+  // Basic profile
+  name      String
+  age       Int?
+  gender    String?
+  bio       String?
+  image     String?
+
+  // Personal details
+  height    Int?     // height in cm
+  occupation String?
+  location  String?
+
+  // Timestamps
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,4 +1,4 @@
-
+import Link from "next/link";
 import {
   ArrowRight,
   Heart,
@@ -32,7 +32,7 @@ export default function LoginPage() {
 
       {/* Navbar */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-6 md:px-10">
-        <a href="/" className="group flex items-center gap-2.5">
+        <Link href="/" className="group flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/20 transition-transform duration-300 group-hover:scale-110">
             <Heart size={17} fill="white" />
           </div>
@@ -40,17 +40,17 @@ export default function LoginPage() {
           <span className="text-2xl font-bold tracking-tight">
             meyo<span className="text-pink-500">.</span>
           </span>
-        </a>
+        </Link>
 
         <div className="hidden items-center gap-2 text-sm text-white/40 sm:flex">
           <span>New here?</span>
 
-          <a
-            href="/signup"
-            className="font-medium text-white transition-colors hover:text-pink-400"
+          <Link
+            href="/register"
+            className="text-sm text-pink-400 transition-colors hover:text-pink-300"
           >
-            Create account
-          </a>
+            Sign up
+          </Link>
         </div>
       </nav>
 

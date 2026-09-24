@@ -1,4 +1,4 @@
-
+import Link from "next/link";
 import {
   ArrowRight,
   Video,
@@ -43,9 +43,10 @@ export default function Home() {
           </div>
 
           {/* Login */}
-          <button className="text-sm font-medium text-white/80 hover:text-white transition">
-            Log in
-          </button>
+          <Link className="text-sm font-medium text-white/80 hover:text-white transition" href="/login">
+          Log in
+          </Link>
+          
         </div>
       </nav>
 
