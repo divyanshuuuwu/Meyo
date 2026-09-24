@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { saveProfileImage } from "@/app/actions/profile";
 
 export default function ImageUpload() {
   const [imageUrl, setImageUrl] = useState("");
@@ -30,7 +31,8 @@ export default function ImageUpload() {
 
       if (!signatureResponse.ok) {
         throw new Error(
-          signatureData.message || "Failed to get upload signature"
+          signatureData.message ||
+            "Failed to get upload signature"
         );
       }
 
@@ -75,7 +77,11 @@ export default function ImageUpload() {
 
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json();
-        console.error("CLOUDINARY ERROR:", errorData);
+
+        console.error(
+          "CLOUDINARY ERROR:",
+          errorData
+        );
 
         throw new Error("Image upload failed");
       }
@@ -85,8 +91,26 @@ export default function ImageUpload() {
 
       console.log("UPLOADED IMAGE:", data);
 
-      // 5. Save Cloudinary URL in state
+      // 5. Show image
       setImageUrl(data.secure_url);
+
+      // 6. Save image URL in PostgreSQL
+      const result = await saveProfileImage(
+        data.secure_url,
+        1
+      );
+
+      if (!result.success) {
+        throw new Error(
+          result.message ||
+            "Failed to save image in database"
+        );
+      }
+
+      console.log(
+        "IMAGE SAVED IN DATABASE:",
+        result
+      );
     } catch (error) {
       console.error("UPLOAD ERROR:", error);
     } finally {

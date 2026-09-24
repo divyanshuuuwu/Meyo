@@ -64,31 +64,35 @@ export async function registerUser(formData: FormData) {
 
 
 
+
+
+
+
+
+
 export async function loginUser(formData: FormData) {
   const email = formData.get("email")?.toString().trim().toLowerCase();
   const password = formData.get("password")?.toString();
 
-  // 1. Validate fields
   if (!email || !password) {
     console.log("Email and password are required");
     return;
   }
 
+  let onboardingCompleted = false;
+
   try {
-    // 2. Find user
     const user = await prisma.user.findUnique({
       where: {
         email,
       },
     });
 
-    // 3. Check if user exists
     if (!user) {
       console.log("Invalid email or password");
       return;
     }
 
-    // 4. Compare entered password with hashed password
     const isPasswordCorrect = await bcrypt.compare(
       password,
       user.password
@@ -99,18 +103,14 @@ export async function loginUser(formData: FormData) {
       return;
     }
 
-    // 5. Create JWT
     const token = jwt.sign(
-      {
-        userId: user.id,
-      },
+      { userId: user.id },
       process.env.JWT_SECRET!,
       {
         expiresIn: "7d",
       }
     );
 
-    // 6. Store JWT in HTTP-only cookie
     const cookieStore = await cookies();
 
     cookieStore.set("token", token, {
@@ -120,12 +120,29 @@ export async function loginUser(formData: FormData) {
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
+
+    onboardingCompleted = user.onboardingCompleted;
+
+    console.log(
+      "ONBOARDING STATUS:",
+      onboardingCompleted
+    );
   } catch (error) {
     console.error("LOGIN ERROR:", error);
     return;
   }
 
-  // 7. Redirect after successful login
-  redirect("/discover");
+  // Redirect OUTSIDE the try/catch
+  if (onboardingCompleted) {
+    redirect("/discover");
+  }
+
+  redirect("/onboarding");
 }
+
+
+
+
+
+
 
