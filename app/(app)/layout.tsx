@@ -13,7 +13,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#0b0b0b] text-white">
+    <div className="min-h-screen bg-[#0b0b0b] text-white ">
       <header className="sticky top-0 z-50 border-b border-[#1f1f1f] bg-[#0b0b0b]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
 

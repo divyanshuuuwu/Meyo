@@ -12,7 +12,7 @@ import {
 
 export default function DiscoverPage() {
   return (
-    <main className="min-h-[calc(100vh-64px)] bg-[#0b0b0b] px-4 py-6 text-white">
+   <main className="h-[calc(100vh-65px)] overflow-hidden  bg-[#0b0b0b] px-4 py-6 text-white">
       <div className="mx-auto w-full max-w-7xl">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
