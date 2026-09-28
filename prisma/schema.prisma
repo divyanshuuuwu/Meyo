@@ -32,6 +32,11 @@ model User {
   // Profile images
   images UserImage[]
 
+  // Relationships
+  sentSwipes     Swipe[] @relation("UserSwipes")
+  receivedSwipes Swipe[] @relation("ReceivedSwipes")
+
+  
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -57,3 +62,16 @@ model UserImage {
   @@unique([userId, position])
 }
 
+
+model Swipe {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String
+  targetId  String
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserSwipes", fields: [userId], references: [id], onDelete: Cascade)
+  target User @relation("ReceivedSwipes", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetId])
+}
