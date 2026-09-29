@@ -8,6 +8,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/app/actions/auth";
 import { redirect } from "next/navigation";
+import MatchButton from "./MatchButton";
 
 export default async function LikesPage() {
   const currentUserId = await getCurrentUserId();
@@ -16,10 +17,41 @@ export default async function LikesPage() {
     redirect("/login");
   }
 
+  // Get all existing matches
+  const matches = await prisma.match.findMany({
+    where: {
+      OR: [
+        {
+          user1Id: currentUserId,
+        },
+        {
+          user2Id: currentUserId,
+        },
+      ],
+    },
+    select: {
+      user1Id: true,
+      user2Id: true,
+    },
+  });
+
+  // Get the IDs of people we have already matched with
+  const matchedUserIds = matches.map((match) =>
+    match.user1Id === currentUserId
+      ? match.user2Id
+      : match.user1Id
+  );
+
+  // Get people who liked us,
+  // but exclude people we already matched with
   const likes = await prisma.swipe.findMany({
     where: {
       targetId: currentUserId,
       action: "LIKE",
+
+      userId: {
+        notIn: matchedUserIds,
+      },
     },
 
     include: {
@@ -93,10 +125,8 @@ export default async function LikesPage() {
                       </div>
                     )}
 
-                    {/* Gradient */}
                     <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
-                    {/* Like badge */}
                     <div className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/50 backdrop-blur-md">
                       <Heart
                         size={17}
@@ -105,7 +135,6 @@ export default async function LikesPage() {
                       />
                     </div>
 
-                    {/* Name */}
                     <div className="absolute bottom-4 left-4">
                       <h2 className="text-xl font-semibold">
                         {person.name}
@@ -121,7 +150,6 @@ export default async function LikesPage() {
 
                   {/* Details */}
                   <div className="p-4">
-
                     <div className="space-y-2">
                       {person.location && (
                         <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -152,15 +180,7 @@ export default async function LikesPage() {
 
                     {/* Actions */}
                     <div className="mt-5 flex gap-2">
-                      <button
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-                      >
-                        <Heart
-                          size={16}
-                          fill="currentColor"
-                        />
-                        Match
-                      </button>
+                      <MatchButton userId={person.id} />
 
                       <button
                         className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#2c2c2c] bg-[#181818] text-gray-400 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
@@ -174,11 +194,9 @@ export default async function LikesPage() {
             })}
           </div>
         ) : (
-
-          /* Empty state */
+          /* Empty State */
           <div className="flex min-h-[500px] items-center justify-center">
             <div className="max-w-sm text-center">
-
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#181818]">
                 <Sparkles
                   size={26}
