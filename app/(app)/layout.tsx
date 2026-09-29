@@ -46,19 +46,19 @@ export default function AppLayout({
             </Link>
 
             <Link
-              href="/matches"
+              href="/likes"
               className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-[#151515] hover:text-white"
             >
               <Heart size={18} />
-              Matches
+              Likes
             </Link>
 
             <Link
-              href="/messages"
+              href="/matches"
               className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-[#151515] hover:text-white"
             >
               <MessageCircle size={18} />
-              Messages
+              Matches
             </Link>
           </nav>
 

@@ -32,9 +32,12 @@ model User {
   // Profile images
   images UserImage[]
 
-  // Relationships
+  // swipes
   sentSwipes     Swipe[] @relation("UserSwipes")
   receivedSwipes Swipe[] @relation("ReceivedSwipes")
+
+  matchesAsUser1 Match[] @relation("UserMatches1")
+  matchesAsUser2 Match[] @relation("UserMatches2")
 
   
   // Timestamps
@@ -74,4 +77,18 @@ model Swipe {
   target User @relation("ReceivedSwipes", fields: [targetId], references: [id], onDelete: Cascade)
 
   @@unique([userId, targetId])
+}
+
+
+
+model Match {
+  id        String   @id @default(cuid())
+  user1Id   String
+  user2Id   String
+  createdAt DateTime @default(now())
+
+  user1 User @relation("UserMatches1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2 User @relation("UserMatches2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@unique([user1Id, user2Id])
 }
