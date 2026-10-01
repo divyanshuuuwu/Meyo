@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
@@ -12,7 +13,6 @@ const io = new Server(httpServer, {
   },
 });
 
-// Authenticate every socket connection
 io.use((socket, next) => {
   try {
     const cookies = socket.handshake.headers.cookie;
@@ -36,45 +36,67 @@ io.use((socket, next) => {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET!
-    ) as { id: string };
+    ) as {
+      userId: string;
+    };
 
-    socket.data.userId = decoded.id;
+    if (!decoded.userId) {
+      return next(new Error("User ID missing from token"));
+    }
 
-    console.log("Socket authenticated:", decoded.id);
+    socket.data.userId = decoded.userId;
+
+    console.log(
+      "Socket authenticated:",
+      decoded.userId
+    );
 
     next();
   } catch (error) {
-    console.error("Socket authentication failed:", error);
+    console.error(
+      "Socket authentication failed:",
+      error
+    );
 
     next(new Error("Invalid token"));
   }
 });
 
 io.on("connection", (socket) => {
-  const userId = socket.data.userId;
+  const userId = socket.data.userId as string;
 
   console.log("User connected:", userId);
 
-  // Personal room for this user
+  // Personal room
   socket.join(userId);
 
   socket.on(
     "send-message",
     async (message, callback) => {
       try {
-        console.log("Received send-message:", message);
+        console.log(
+          "Received send-message:",
+          message
+        );
 
-        const { conversationId, content } = message;
+        const conversationId =
+          message?.conversationId;
+
+        const content =
+          message?.content?.trim();
 
         if (!conversationId) {
-          throw new Error("Conversation ID is required");
+          throw new Error(
+            "Conversation ID is required"
+          );
         }
 
-        if (!content?.trim()) {
-          throw new Error("Message content is required");
+        if (!content) {
+          throw new Error(
+            "Message content is required"
+          );
         }
 
-        // Find conversation
         const conversation =
           await prisma.conversation.findUnique({
             where: {
@@ -83,10 +105,11 @@ io.on("connection", (socket) => {
           });
 
         if (!conversation) {
-          throw new Error("Conversation not found");
+          throw new Error(
+            "Conversation not found"
+          );
         }
 
-        // Make sure sender belongs to conversation
         const isParticipant =
           conversation.user1Id === userId ||
           conversation.user2Id === userId;
@@ -97,23 +120,28 @@ io.on("connection", (socket) => {
           );
         }
 
-        // Find receiver
         const receiverId =
           conversation.user1Id === userId
             ? conversation.user2Id
             : conversation.user1Id;
 
-        // Save message
         const newMessage =
           await prisma.message.create({
             data: {
-              content: content.trim(),
+              content,
               conversationId,
               senderId: userId,
             },
+            include: {
+              sender: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
           });
 
-        // Update conversation timestamp
         await prisma.conversation.update({
           where: {
             id: conversationId,
@@ -124,8 +152,8 @@ io.on("connection", (socket) => {
         });
 
         console.log(
-          "Message saved successfully:",
-          newMessage
+          "Message saved:",
+          newMessage.id
         );
 
         // Send to receiver
@@ -134,13 +162,12 @@ io.on("connection", (socket) => {
           newMessage
         );
 
-        // Send back to sender
+        // Send to sender
         io.to(userId).emit(
           "new-message",
           newMessage
         );
 
-        // Tell sender everything succeeded
         if (callback) {
           callback({
             success: true,

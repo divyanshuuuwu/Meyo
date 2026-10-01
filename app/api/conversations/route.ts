@@ -1,119 +1,229 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/app/actions/auth";
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    const userId = await getCurrentUserId();
 
-    if (!token) {
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET!
-    ) as { id: string };
+    const conversations =
+      await prisma.conversation.findMany({
+        where: {
+          OR: [
+            { user1Id: userId },
+            { user2Id: userId },
+          ],
+        },
 
-    const userId = decoded.id;
-
-    const conversations = await prisma.conversation.findMany({
-      where: {
-        OR: [
-          {
-            user1Id: userId,
-          },
-          {
-            user2Id: userId,
-          },
-        ],
-      },
-
-      include: {
-        user1: {
-          include: {
-            images: {
-              orderBy: {
-                position: "asc",
+        include: {
+          user1: {
+            include: {
+              images: {
+                orderBy: {
+                  position: "asc",
+                },
+                take: 1,
               },
-              take: 1,
             },
           },
-        },
 
-        user2: {
-          include: {
-            images: {
-              orderBy: {
-                position: "asc",
+          user2: {
+            include: {
+              images: {
+                orderBy: {
+                  position: "asc",
+                },
+                take: 1,
               },
-              take: 1,
             },
           },
-        },
 
-        messages: {
-          orderBy: {
-            createdAt: "desc",
+          messages: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1,
           },
-          take: 1,
         },
-      },
 
-      orderBy: {
-        updatedAt: "desc",
-      },
-    });
+        orderBy: {
+          updatedAt: "desc",
+        },
+      });
 
-    const formattedConversations = conversations.map(
-      (conversation) => {
+    const formattedConversations =
+      conversations.map((conversation) => {
         const otherUser =
           conversation.user1Id === userId
             ? conversation.user2
             : conversation.user1;
 
-        const lastMessage = conversation.messages[0];
-
         return {
           id: conversation.id,
 
-          name: otherUser.name,
-
-          image:
-            otherUser.images[0]?.url ??
-            "https://i.pravatar.cc/150?img=12",
+          user: {
+            id: otherUser.id,
+            name: otherUser.name,
+            image:
+              otherUser.images[0]?.url ?? null,
+          },
 
           lastMessage:
-            lastMessage?.content ?? "Start a conversation",
+            conversation.messages[0] ?? null,
 
-          time: lastMessage
-            ? lastMessage.createdAt
-            : conversation.createdAt,
-
-          unread: 0,
-
-          online: false,
+          updatedAt: conversation.updatedAt,
         };
-      }
-    );
+      });
 
-    return NextResponse.json({
-      userId,
-      conversations: formattedConversations,
-    });
+    return NextResponse.json(
+      formattedConversations
+    );
   } catch (error) {
     console.error(
-      "Failed to fetch conversations:",
+      "GET conversations error:",
       error
     );
 
     return NextResponse.json(
-      { error: "Failed to fetch conversations" },
+      {
+        error:
+          "Failed to fetch conversations",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: Request
+) {
+  try {
+    const currentUserId =
+      await getCurrentUserId();
+
+    if (!currentUserId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    const targetUserId = body.userId;
+
+    if (!targetUserId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (currentUserId === targetUserId) {
+      return NextResponse.json(
+        {
+          error:
+            "You cannot create a conversation with yourself",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Make sure the target user exists
+    const targetUser =
+      await prisma.user.findUnique({
+        where: {
+          id: targetUserId,
+        },
+      });
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Only matched users can start a conversation
+    const match =
+      await prisma.match.findFirst({
+        where: {
+          OR: [
+            {
+              user1Id: currentUserId,
+              user2Id: targetUserId,
+            },
+            {
+              user1Id: targetUserId,
+              user2Id: currentUserId,
+            },
+          ],
+        },
+      });
+
+    if (!match) {
+      return NextResponse.json(
+        {
+          error:
+            "You can only message someone you matched with",
+        },
+        { status: 403 }
+      );
+    }
+
+    // Always store users in a consistent order
+    const [user1Id, user2Id] = [
+      currentUserId,
+      targetUserId,
+    ].sort();
+
+    // Find existing conversation
+    let conversation =
+      await prisma.conversation.findUnique({
+        where: {
+          user1Id_user2Id: {
+            user1Id,
+            user2Id,
+          },
+        },
+      });
+
+    // Create one if it doesn't exist
+    if (!conversation) {
+      conversation =
+        await prisma.conversation.create({
+          data: {
+            user1Id,
+            user2Id,
+          },
+        });
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        conversation,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error(
+      "POST conversation error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Failed to create conversation",
+      },
       { status: 500 }
     );
   }
