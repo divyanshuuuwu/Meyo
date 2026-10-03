@@ -6,6 +6,7 @@ import {
   Send,
   ArrowLeft,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 
 import { socket } from "@/lib/socket";
@@ -151,7 +152,7 @@ export default function MatchesClient({
                   "application/json",
               },
               body: JSON.stringify({
-                userId: selectedUser.id,
+                userId: selectedUser?.id,
               }),
             }
           );
@@ -419,6 +420,14 @@ export default function MatchesClient({
                   Matched
                 </p>
               </div>
+              {/* Quick Date */}
+              <button
+                disabled
+                className="flex h-11 items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-5 text-sm font-medium text-purple-300 opacity-60"
+              >
+                <Sparkles className="h-4 w-4" />
+                Quick Date
+              </button>
 
               <button
                 onClick={closeChat}

@@ -180,14 +180,7 @@ export default function DiscoverClient({
                 )}
               </button>
 
-              {/* Quick Date */}
-              <button
-                disabled
-                className="flex h-11 items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-5 text-sm font-medium text-purple-300 opacity-60"
-              >
-                <Sparkles className="h-4 w-4" />
-                Quick Date
-              </button>
+              
 
               {/* Like */}
               <button

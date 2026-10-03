@@ -43,8 +43,11 @@ export default function Home() {
           </div>
 
           {/* Login */}
-          <Link className="text-sm font-medium text-white/80 hover:text-white transition" href="/login">
+          <Link className="text-sm font-semibold text-white/80 hover:text-white transition" href="/login">
           Log in
+          </Link>
+           <Link className="text-sm font-semibold text-white/80 hover:text-white transition" href="/register">
+          sign up
           </Link>
           
         </div>
